@@ -1,0 +1,2746 @@
+{
+	"info": {
+		"_postman_id": "edu-platform-api-v1-complete",
+		"name": "EduPlatform API v1 - Complete Feature Tests",
+		"description": "Complete Postman collection for the current Laravel API v1. Covers authentication, registration, profile, content CRUD, PDF upload and student access, question reports, explanation videos, notifications, and dashboards. Seed the database and log in as a teacher first. Select a local PDF file for the upload request. Google login and password reset require valid external credentials/OTP.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "teacher_email",
+			"value": "teacher@eduplatform.com",
+			"type": "string"
+		},
+		{
+			"key": "teacher_password",
+			"value": "password",
+			"type": "string"
+		},
+		{
+			"key": "student_email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "student_password",
+			"value": "password123",
+			"type": "string"
+		},
+		{
+			"key": "student_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "teacher_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "registration_email",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "registration_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "registration_otp",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "google_id_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "password_reset_otp",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "new_password",
+			"value": "NewPassword123!",
+			"type": "string"
+		},
+		{
+			"key": "course_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "chapter_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "lesson_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "lesson_id_2",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "pdf_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "question_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "video_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "notification_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "student_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Authentication & Account",
+			"item": [
+				
+				{
+					"name": "Login student",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{student_email}}\",\n    \"password\": \"{{student_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.collectionVariables.set(\"student_token\", pm.response.json().data.token);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Get current user",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.test(\"Returns a student\", function () { pm.expect(pm.response.json().data.role).to.eql(\"student\"); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Register OTP - step 1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/register/step1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register",
+								"step1"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"OTP Postman Student\",\n    \"email\": \"{{registration_email}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"description": "On local environment, the API returns the OTP in data. Elsewhere, enter the emailed code in registration_otp."
+					},
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.collectionVariables.set(\"registration_email\", \"otp_student_\" + Date.now() + \"@example.test\"); pm.collectionVariables.unset(\"registration_otp\");"
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"const d = pm.response.json().data; pm.collectionVariables.set(\"registration_token\", d.registration_token); if (d.otp) pm.collectionVariables.set(\"registration_otp\", d.otp);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Register OTP - step 2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/register/step2",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register",
+								"step2"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"registration_token\": \"{{registration_token}}\",\n    \"password\": \"{{student_password}}\",\n    \"password_confirmation\": \"{{student_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Register OTP - step 3",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/register/step3",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register",
+								"step3"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"registration_token\": \"{{registration_token}}\",\n    \"otp\": \"{{registration_otp}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"description": "Run after steps 1 and 2. If the OTP is not returned in local development, enter the received code in registration_otp."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.collectionVariables.get(\"registration_otp\")) { pm.test(\"OTP registration succeeds\", function () { pm.response.to.have.status(201); pm.expect(pm.response.json().success).to.eql(true); }); pm.collectionVariables.set(\"otp_student_token\", pm.response.json().data.token); } else { pm.test(\"OTP is required outside local environment\", function () { pm.response.to.have.status(400); }); }"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Login teacher",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{teacher_email}}\",\n    \"password\": \"{{teacher_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"description": "Optional or environment-dependent request; follow the setup notes and provide a valid token, OTP, or local file when required."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.collectionVariables.set(\"teacher_token\", pm.response.json().data.token);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Google login (optional; real ID token required)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/google",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"google"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"google_token\": \"{{google_id_token}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"description": "Optional: set google_id_token to a valid Google ID token; the API verifies it with Google."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.collectionVariables.get(\"google_id_token\")) { pm.test(\"Google login succeeds\", function () { pm.response.to.have.status(200); pm.expect(pm.response.json().success).to.eql(true); }); pm.collectionVariables.set(\"google_token\", pm.response.json().data.token); } else { pm.test(\"Google token is required\", function () { pm.response.to.have.status(422); }); }"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update profile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/profile",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"profile"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Postman Student Updated\",\n    \"phone\": \"01000000000\",\n    \"subject\": \"Mathematics\",\n    \"telegram_link\": \"https://t.me/postman_student\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Change password",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/change-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"change-password"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"current_password\": \"{{student_password}}\",\n    \"new_password\": \"{{new_password}}\",\n    \"new_password_confirmation\": \"{{new_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.collectionVariables.set(\"student_password\", pm.collectionVariables.get(\"new_password\"));"
+								]
+							}
+						}
+					]
+				},
+				
+				{
+					"name": "Request password reset",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/forgot-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"forgot-password"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{student_email}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"description": "Optional or environment-dependent request; follow the setup notes and provide a valid token, OTP, or local file when required."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Reset password (manual OTP required)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/reset-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"reset-password"
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"{{student_email}}\",\n    \"otp\": \"{{password_reset_otp}}\",\n    \"password\": \"{{student_password}}\",\n    \"password_confirmation\": \"{{student_password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"description": "Run after requesting a reset and setting a valid email OTP in password_reset_otp."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"if (pm.collectionVariables.get(\"password_reset_otp\")) { pm.test(\"Password reset succeeds\", function () { pm.response.to.have.status(200); pm.expect(pm.response.json().success).to.eql(true); }); } else { pm.test(\"Password reset OTP is required\", function () { pm.response.to.have.status(422); }); }"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "2. Teacher: Courses, Chapters, Lessons & PDFs",
+			"item": [
+				{
+					"name": "List teacher courses",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/courses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"courses"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Create course",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/courses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"courses"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Postman API Test Course\",\n    \"description\": \"Course created by the complete API collection.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.collectionVariables.set(\"course_id\", pm.response.json().data.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Show course",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/courses/{{course_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"courses",
+								"{{course_id}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update course",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/courses/{{course_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"courses",
+								"{{course_id}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Postman API Test Course Updated\",\n    \"description\": \"Updated by Postman collection.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Create chapter",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/courses/{{course_id}}/chapters",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"courses",
+								"{{course_id}}",
+								"chapters"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Postman Chapter\",\n    \"position\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.collectionVariables.set(\"chapter_id\", pm.response.json().data.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update chapter",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/chapters/{{chapter_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"chapters",
+								"{{chapter_id}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Postman Chapter Updated\",\n    \"position\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Create lesson 1",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/chapters/{{chapter_id}}/lessons",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"chapters",
+								"{{chapter_id}}",
+								"lessons"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Postman Lesson 1\",\n    \"position\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.collectionVariables.set(\"lesson_id\", pm.response.json().data.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Create lesson 2",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/chapters/{{chapter_id}}/lessons",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"chapters",
+								"{{chapter_id}}",
+								"lessons"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Postman Lesson 2\",\n    \"position\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.collectionVariables.set(\"lesson_id_2\", pm.response.json().data.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update lesson",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/lessons/{{lesson_id_2}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"lessons",
+								"{{lesson_id_2}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Postman Lesson 2 Updated\",\n    \"position\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Reorder lessons",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/chapters/{{chapter_id}}/lessons/reorder",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"chapters",
+								"{{chapter_id}}",
+								"lessons",
+								"reorder"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"lessons\": [\n        {\n            \"id\": \"{{lesson_id}}\",\n            \"position\": 2\n        },\n        {\n            \"id\": \"{{lesson_id_2}}\",\n            \"position\": 1\n        }\n    ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Upload PDF (select a local PDF file)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/lessons/{{lesson_id}}/pdfs",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"lessons",
+								"{{lesson_id}}",
+								"pdfs"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "title",
+									"value": "Postman Test PDF",
+									"type": "text"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": ""
+								}
+							]
+						},
+						"description": "Select a real PDF file in the file field before sending; maximum size is 20 MB."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.collectionVariables.set(\"pdf_id\", pm.response.json().data.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Publish course",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/courses/{{course_id}}/publish",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"courses",
+								"{{course_id}}",
+								"publish"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Unpublish course",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/courses/{{course_id}}/unpublish",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"courses",
+								"{{course_id}}",
+								"unpublish"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Verify unpublished course is hidden",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/courses/{{course_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"courses",
+								"{{course_id}}"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Unpublished course returns 404\", function () { pm.response.to.have.status(404); }); pm.test(\"API error envelope\", function () { pm.expect(pm.response.json().success).to.eql(false); });"
+								]
+							}
+						}
+					]
+				}
+				
+			]
+		},
+		{
+			"name": "3. Student: Courses, PDFs & Question Reports",
+			"item": [
+				{
+					"name": "Browse published courses",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/courses",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"courses"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Show published course tree",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/courses/{{course_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"courses",
+								"{{course_id}}"
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Download/stream PDF file",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pdfs/{{pdf_id}}/file",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pdfs",
+								"{{pdf_id}}",
+								"file"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.test(\"PDF response has a content type\", function () { pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/pdf\"); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Track PDF view",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pdfs/{{pdf_id}}/view",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pdfs",
+								"{{pdf_id}}",
+								"view"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Report question",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pdfs/{{pdf_id}}/question-reports",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pdfs",
+								"{{pdf_id}}",
+								"question-reports"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"question_number\": 15,\n    \"question_text\": \"Postman test report\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.collectionVariables.set(\"question_id\", pm.response.json().data.question_id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Submit duplicate report (idempotency behavior)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/pdfs/{{pdf_id}}/question-reports",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"pdfs",
+								"{{pdf_id}}",
+								"question-reports"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"question_number\": 15,\n    \"question_text\": \"Duplicate report test\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.collectionVariables.set(\"question_id\", pm.response.json().data.question_id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "List my question reports",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/me/question-reports",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"me",
+								"question-reports"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "4. Teacher: Question Dashboard, Videos & Statistics",
+			"item": [
+				{
+					"name": "List reported questions",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/questions",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"questions"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Filter question dashboard by course and lesson",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/questions?course_id={{course_id}}&lesson_id={{lesson_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"questions?course_id={{course_id}}&lesson_id={{lesson_id}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Show question and its reports",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/questions/{{question_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"questions",
+								"{{question_id}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Create YouTube explanation video",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/questions/{{question_id}}/videos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"questions",
+								"{{question_id}}",
+								"videos"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Postman question explanation\",\n    \"external_id\": \"dQw4w9WgXcQ\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"description": "The request must use external_id as required by the current FormRequest."
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 201\", function () { pm.response.to.have.status(201); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"pm.collectionVariables.set(\"video_id\", pm.response.json().data.id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Update explanation video",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/videos/{{video_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"videos",
+								"{{video_id}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						},
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated Postman explanation\",\n    \"external_id\": \"dQw4w9WgXcQ\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Publish explanation video (sends notification)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/videos/{{video_id}}/publish",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"videos",
+								"{{video_id}}",
+								"publish"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Teacher dashboard statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/dashboard/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"dashboard",
+								"stats"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "5. Student: Videos, Dashboard & Notifications",
+			"item": [
+				{
+					"name": "List published videos for question",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/questions/{{question_id}}/videos",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"questions",
+								"{{question_id}}",
+								"videos"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Show published video",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/videos/{{video_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"videos",
+								"{{video_id}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Student dashboard",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/me/dashboard",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"me",
+								"dashboard"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "List notifications",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifications",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"notifications"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });",
+									"const d = pm.response.json().data; const rows = d.data || []; if (rows.length) pm.collectionVariables.set(\"notification_id\", rows[0].id);"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Unread notification count",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifications/unread-count",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"notifications",
+								"unread-count"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				
+				{
+					"name": "Mark all notifications as read",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifications/read-all",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"notifications",
+								"read-all"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				}
+			]
+		},
+		
+		{
+			"name": "7. Cleanup: Delete Test Records",
+			"item": [
+				{
+					"name": "Delete test video",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/videos/{{video_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"videos",
+								"{{video_id}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete test PDF",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/pdfs/{{pdf_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"pdfs",
+								"{{pdf_id}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete lesson 2",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/lessons/{{lesson_id_2}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"lessons",
+								"{{lesson_id_2}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete lesson 1",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/lessons/{{lesson_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"lessons",
+								"{{lesson_id}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete chapter",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/chapters/{{chapter_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"chapters",
+								"{{chapter_id}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Delete course",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/teacher/courses/{{course_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"teacher",
+								"courses",
+								"{{course_id}}"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Logout student",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{student_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				},
+				{
+					"name": "Logout teacher",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/json"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						},
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{teacher_token}}",
+									"type": "string"
+								}
+							]
+						}
+					},
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"HTTP 200\", function () { pm.response.to.have.status(200); });",
+									"pm.test(\"API success envelope\", function () { pm.expect(pm.response.json().success).to.eql(true); });"
+								]
+							}
+						}
+					]
+				}
+			]
+		}
+	]
+}
